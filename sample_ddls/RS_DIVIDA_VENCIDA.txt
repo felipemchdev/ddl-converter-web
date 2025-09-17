@@ -1,0 +1,123 @@
+      CREATE TABLESPACE RSDIVENC IN DB2RS
+             USING STOGROUP STOGSMS
+              PRIQTY    1048320
+              SECQTY    131068
+              ERASE     NO
+             LOCKSIZE   ANY
+             BUFFERPOOL BP9
+             COMPRESS   YES
+             CLOSE      NO
+             PCTFREE    10
+             FREEPAGE   000
+             SEGSIZE    64;
+
+      CREATE TABLE Z00.RS_DIVIDA_VENCIDA
+             (CO_TIPO_PESS_CAD   CHAR(1)         NOT NULL,
+              CO_TIPO_DOC_CAD    CHAR(1)         NOT NULL,
+              NU_DOCUMENTO_CAD   INTEGER         NOT NULL,
+              CO_COMPLDOC_CDE    INTEGER         NOT NULL,
+              NO_COMPLETO_CAD    VARCHAR(70)     NOT NULL,
+              NU_DOC_INFORM_CDE  INTEGER         NOT NULL,
+              CO_COMPLDOCINF_CDE INTEGER         NOT NULL,
+              NU_DOC_CUSTOD_CDE  INTEGER         NOT NULL,
+              CO_COMPLDOCCUS_CDE INTEGER         NOT NULL,
+              NU_DOC_CRED_CDE    INTEGER         NOT NULL,
+              CO_COMPLDOCCRE_CDE INTEGER         NOT NULL,
+              CO_CTR_DEVEDOR_CDE CHAR(01)        NOT NULL,
+              CO_TP_VISIBIL_CDE  CHAR(01)        NOT NULL,
+              CO_TITULO_CDE      CHAR(20)        NOT NULL,
+              CO_NOSSONUMERO_CDE CHAR(15)        NOT NULL,
+              DE_USO_CLIENTE_CDE CHAR(20)        NOT NULL,
+              DT_EMISSAO_CDE     DATE            NOT NULL,
+              DT_VENCIMENTO_CDE  DATE            NOT NULL,
+              DT_DECURSO_CDE     DATE            NOT NULL,
+              CO_NATUREZA_NAT    CHAR(3)         NOT NULL,
+              NO_CIDADE_CDE      VARCHAR(60)     NOT NULL,
+              CO_UF_OCORR_CDE    CHAR(02)        NOT NULL,
+              CO_UF_ENDER_CDE    CHAR(02)        NOT NULL,
+              CO_TP_MOEDA_CDE    CHAR(3)         NOT NULL,
+              VL_TITULO_CDE      DECIMAL(15,2)   NOT NULL,
+              VL_SALDO_CDE       DECIMAL(15,2)   NOT NULL,
+              CO_ENDOSSO_CDE     CHAR(01)        NOT NULL,
+              CO_ACEITE_CDE      CHAR(01)        NOT NULL,
+              CO_AREAINFORM_REM  SMALLINT        NOT NULL,
+              DT_MOVIMENTO_CDE   DATE            NOT NULL,
+              NU_CHAVCADUS_CDE   INTEGER         NOT NULL,
+              CO_SUBJUDICE_CDE   CHAR(01)        NOT NULL,
+              CO_MONITORACAO_CDE CHAR(01)    NOT NULL WITH DEFAULT 'N',
+              CO_USERIDINC_CDE   CHAR(8)         NOT NULL,
+              DT_INCLUSAO_CDE    DATE            NOT NULL,
+              HO_INCLUSAO_CDE    TIME            NOT NULL,
+              CO_USERIDALT_CDE   CHAR(8)         NOT NULL,
+              DT_ALTERACAO_CDE   DATE            NOT NULL,
+              HO_ALTERACAO_CDE   TIME            NOT NULL)
+      IN DB2RS.RSDIVENC;
+
+      CREATE UNIQUE INDEX Z00.XPKRSDIVVEN
+             ON Z00.RS_DIVIDA_VENCIDA
+             (CO_TIPO_PESS_CAD   ASC,
+              CO_TIPO_DOC_CAD    ASC,
+              NU_DOCUMENTO_CAD   ASC,
+              CO_COMPLDOC_CDE    ASC,
+              NU_DOC_INFORM_CDE  ASC,
+              CO_COMPLDOCINF_CDE ASC,
+              NU_DOC_CUSTOD_CDE  ASC,
+              CO_COMPLDOCCUS_CDE ASC,
+              NU_DOC_CRED_CDE    ASC,
+              CO_COMPLDOCCRE_CDE ASC,
+              CO_CTR_DEVEDOR_CDE ASC,
+              CO_TP_VISIBIL_CDE  ASC,
+              CO_TITULO_CDE      ASC,
+              CO_NOSSONUMERO_CDE ASC,
+              DE_USO_CLIENTE_CDE ASC)
+      USING STOGROUP STOGSMS
+      PRIQTY 1048320 SECQTY 131068
+      ERASE NO
+      BUFFERPOOL BP9
+      CLOSE NO;
+
+      LABEL ON TABLE Z00.RS_DIVIDA_VENCIDA
+            IS 'Tabela de controle de dividas vencidas';
+
+      LABEL ON Z00.RS_DIVIDA_VENCIDA
+            (CO_TIPO_PESS_CAD   IS 'Codigo do tipo de pessoa do cadastro',
+             CO_TIPO_DOC_CAD    IS 'Codigo do tipo de documento do cadastro',
+             NU_DOCUMENTO_CAD   IS 'Numero do documento do cadastro',
+             CO_COMPLDOC_CDE    IS 'Codigo complementar do documento',
+             NO_COMPLETO_CAD    IS 'Nome completo do cadastro',
+             NU_DOC_INFORM_CDE  IS 'Numero do documento do informante',
+             CO_COMPLDOCINF_CDE IS 'Codigo complementar do documento informante',
+             NU_DOC_CUSTOD_CDE  IS 'Numero do documento do custodiante',
+             CO_COMPLDOCCUS_CDE IS 'Codigo complementar do documento custodiante',
+             NU_DOC_CRED_CDE    IS 'Numero do documento do credor',
+             CO_COMPLDOCCRE_CDE IS 'Codigo complementar do documento credor',
+             CO_CTR_DEVEDOR_CDE IS 'Codigo de controle do devedor',
+             CO_TP_VISIBIL_CDE  IS 'Codigo do tipo de visibilidade',
+             CO_TITULO_CDE      IS 'Codigo do titulo',
+             CO_NOSSONUMERO_CDE IS 'Codigo do nosso numero',
+             DE_USO_CLIENTE_CDE IS 'Descricao de uso do cliente',
+             DT_EMISSAO_CDE     IS 'Data de emissao',
+             DT_VENCIMENTO_CDE  IS 'Data de vencimento',
+             DT_DECURSO_CDE     IS 'Data de decurso de prazo',
+             CO_NATUREZA_NAT    IS 'Codigo da natureza',
+             NO_CIDADE_CDE      IS 'Nome da cidade',
+             CO_UF_OCORR_CDE    IS 'Codigo da UF de ocorrencia',
+             CO_UF_ENDER_CDE    IS 'Codigo da UF do endereco',
+             CO_TP_MOEDA_CDE    IS 'Codigo do tipo de moeda',
+             VL_TITULO_CDE      IS 'Valor do titulo',
+             VL_SALDO_CDE       IS 'Valor do saldo',
+             CO_ENDOSSO_CDE     IS 'Codigo de endosso',
+             CO_ACEITE_CDE      IS 'Codigo de aceite',
+             CO_AREAINFORM_REM  IS 'Codigo da area do informante',
+             DT_MOVIMENTO_CDE   IS 'Data do movimento',
+             NU_CHAVCADUS_CDE   IS 'Numero da chave do cadastro de usuario',
+             CO_SUBJUDICE_CDE   IS 'Codigo de sub judice',
+             CO_MONITORACAO_CDE IS 'Codigo de monitoracao',
+             CO_USERIDINC_CDE   IS 'Codigo do usuario de inclusao',
+             DT_INCLUSAO_CDE    IS 'Data de inclusao',
+             HO_INCLUSAO_CDE    IS 'Hora de inclusao',
+             CO_USERIDALT_CDE   IS 'Codigo do usuario de alteracao',
+             DT_ALTERACAO_CDE   IS 'Data de alteracao',
+             HO_ALTERACAO_CDE   IS 'Hora de alteracao');
+
+      COMMIT;

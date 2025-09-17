@@ -21,37 +21,21 @@ Aplicação web moderna para conversão de arquivos DDL (Data Definition Languag
 
 ## 🚀 Como Usar
 
-### ⚡ **MÉTODO MAIS FÁCIL (Para Iniciantes)**
-
-**Duplo clique no arquivo:** `INICIAR_AQUI.bat`
-
-✅ **Instala tudo automaticamente**  
-✅ **Abre o navegador sozinho**  
-✅ **Pronto para usar!**
-
----
-
-### 🔧 **Método Manual (Para Técnicos)**
-
-#### 📋 Pré-requisitos
+### 📋 Pré-requisitos
 
 - **Python 3.8+** instalado no sistema
 - **Conexão com internet** para instalar dependências
 
-#### 1️⃣ Baixar e Preparar
+### 1️⃣ Iniciar a Aplicação
 
 ```bash
-# Navegue até a pasta do projeto
+# 1. Navegue até a pasta do projeto
 cd ddl-converter-web
 
-# Instalar dependências (apenas na primeira vez)
+# 2. Instalar dependências (apenas na primeira vez)
 pip install -r requirements.txt
-```
 
-#### 2️⃣ Executar a Aplicação
-
-```bash
-# Iniciar o servidor web
+# 3. Iniciar o servidor web
 python app.py
 ```
 
@@ -66,6 +50,38 @@ Acesse: http://localhost:5000
 ```
 
 **O navegador abrirá automaticamente** em `http://localhost:5000` após 1.5 segundos!
+
+### 2️⃣ Usar a Interface Web
+
+#### ✅ **Passo 1: Enviar Arquivos**
+- Arraste seus arquivos `.txt` ou `.ddl` para a área azul
+- OU clique em "Selecionar Arquivos"
+
+#### ✅ **Passo 2: Processar**
+- Clique no botão **"Processar Arquivos"**
+- Aguarde a barra de progresso completar
+
+#### ✅ **Passo 3: Baixar Resultados**
+- **CSV individual**: Clique no botão "CSV" 
+- **JSON individual**: Clique no botão "JSON"
+- **Todos juntos**: Clique em "Baixar Todos (ZIP)"
+
+### 3️⃣ Compartilhar na Rede (Opcional)
+
+**Para outras pessoas usarem na mesma rede Wi-Fi:**
+
+1. **Descubra seu IP:**
+   - Windows: `ipconfig` no cmd
+   - Mac/Linux: `ifconfig` no terminal
+
+2. **Compartilhe o endereço:**
+   - `http://SEU_IP:5000`
+   - Exemplo: `http://192.168.1.100:5000`
+
+### 🛑 Para Parar
+
+- Pressione `Ctrl + C` no terminal
+- Feche o terminal
 
 ### 3️⃣ Acessar a Interface
 

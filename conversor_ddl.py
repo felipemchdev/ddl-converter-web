@@ -632,15 +632,15 @@ def processar_arquivo_ddl(caminho_ddl: str, pasta_saida: str = "output") -> Dict
         # Gerar dicionário automaticamente
         dicionario = gerar_dicionario_automatico(info_tabela)
         
-        # Salvar CSV para referência
-        caminho_csv = f"{pasta_saida}/dicionarios/{nome_tabela}.csv"
+        # Salvar CSV para referência (diretamente na pasta de saída)
+        caminho_csv = os.path.join(pasta_saida, f"{nome_tabela}.csv")
         criar_dicionario_csv(info_tabela, caminho_csv)
         
         # Criar configuração MLOps diretamente
         configuracao = criar_configuracao_mlops(info_tabela, dicionario)
         
-        # Salvar arquivo JSON
-        caminho_json = f"{pasta_saida}/json/{nome_tabela.lower()}.json"
+        # Salvar arquivo JSON (diretamente na pasta de saída)
+        caminho_json = os.path.join(pasta_saida, f"{nome_tabela.lower()}.json")
         salvar_configuracao_json(configuracao, caminho_json)
         
         return {

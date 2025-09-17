@@ -155,25 +155,32 @@ def process_files():
                         # Marcar como processado
                         processed_files.add(file_hash)
                         
-                        # Adicionar ao histórico da sessão
-                        history_item = {
-                            'filename': file_info['filename'],
-                            'table_name': resultado['nome_tabela'],
-                            'csv_path': resultado['caminho_csv'],
-                            'json_path': resultado['caminho_json'],
-                            'columns': resultado['num_colunas'],
-                            'timestamp': datetime.now().strftime("%H:%M:%S"),
-                            'date': datetime.now().strftime("%d/%m/%Y")
-                        }
-                        session_history.append(history_item)
+                        # Extrair apenas os nomes dos arquivos para download
+                        nome_csv = os.path.basename(resultado['caminho_csv'])
+                        nome_json = os.path.basename(resultado['caminho_json'])
                         
-                        processing_status[thread_id]['results'].append({
-                            'filename': file_info['filename'],
-                            'table_name': resultado['nome_tabela'],
-                            'csv_path': resultado['caminho_csv'],
-                            'json_path': resultado['caminho_json'],
-                            'columns': resultado['num_colunas']
+                        # Adicionar ao histórico da sessão
+                        session_history.append({
+                            'nome_arquivo': filename,
+                            'nome_tabela': resultado['nome_tabela'],
+                            'caminho_csv': nome_csv,
+                            'caminho_json': nome_json,
+                            'num_colunas': resultado['num_colunas'],
+                            'timestamp': datetime.now().strftime('%d/%m/%Y %H:%M:%S')
                         })
+                        
+                        processing_status[thread_id] = {
+                            'status': 'completed',
+                            'progress': 100,
+                            'message': f'Arquivo processado com sucesso! Tabela: {resultado["nome_tabela"]}',
+                            'result': {
+                                'sucesso': True,
+                                'nome_tabela': resultado['nome_tabela'],
+                                'caminho_csv': nome_csv,
+                                'caminho_json': nome_json,
+                                'num_colunas': resultado['num_colunas']
+                            }
+                        }
                     else:
                         processing_status[thread_id]['errors'].append({
                             'filename': file_info['filename'],
@@ -220,11 +227,28 @@ def download_file(filename):
     """Endpoint para download de arquivos gerados"""
     try:
         file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+        
+        # Debug: log do caminho do arquivo
+        print(f"[DEBUG] Tentando baixar: {filename}")
+        print(f"[DEBUG] Caminho completo: {file_path}")
+        print(f"[DEBUG] Arquivo existe: {os.path.exists(file_path)}")
+        
         if os.path.exists(file_path):
             return send_file(file_path, as_attachment=True)
         else:
-            return jsonify({'success': False, 'error': 'Arquivo não encontrado'})
+            # Listar arquivos disponíveis para debug
+            available_files = []
+            if os.path.exists(app.config['OUTPUT_FOLDER']):
+                available_files = os.listdir(app.config['OUTPUT_FOLDER'])
+            
+            print(f"[DEBUG] Arquivos disponíveis: {available_files}")
+            return jsonify({
+                'success': False, 
+                'error': f'Arquivo não encontrado: {filename}',
+                'available_files': available_files
+            })
     except Exception as e:
+        print(f"[ERROR] Erro no download: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/download_all')

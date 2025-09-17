@@ -20,7 +20,7 @@ const notification = document.getElementById('notification');
 uploadArea.addEventListener('dragover', handleDragOver);
 uploadArea.addEventListener('dragleave', handleDragLeave);
 uploadArea.addEventListener('drop', handleDrop);
-uploadArea.addEventListener('click', () => fileInput.click());
+// Removido: uploadArea.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', handleFileSelect);
 

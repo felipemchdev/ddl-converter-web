@@ -1,0 +1,67 @@
+{
+    "EXEMPLO": {
+        "delimiter": "|",
+        "format": "csv",
+        "tableKey": [],
+        "structure": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "ID",
+                    "type": "integer",
+                    "nullable": true,
+                    "metadata": {
+                        "description": "Identificador único",
+                        "inputType": "INTEGER",
+                        "outputType": "integer",
+                        "renameTo": "ID",
+                        "jsonParameterName": "int",
+                        "curations": [
+                            {
+                                "name": "StringToType",
+                                "input": "integer",
+                                "runOn": [
+                                    "kafka",
+                                    "unload"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "NOME",
+                    "type": "string",
+                    "nullable": true,
+                    "metadata": {
+                        "description": "Nome completo",
+                        "inputType": "VARCHAR",
+                        "outputType": "string",
+                        "renameTo": "NOME",
+                        "jsonParameterName": "string"
+                    }
+                },
+                {
+                    "name": "DATA_NASC",
+                    "type": "date",
+                    "nullable": true,
+                    "metadata": {
+                        "description": "Data de nascimento",
+                        "inputType": "DATE",
+                        "outputType": "date",
+                        "renameTo": "DATA_NASC",
+                        "jsonParameterName": "string",
+                        "curations": [
+                            {
+                                "name": "StringToDate",
+                                "input": "dd.MM.yyyy",
+                                "runOn": [
+                                    "unload"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

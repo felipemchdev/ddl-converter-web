@@ -1,0 +1,4 @@
+coluna_mf;descricao_mf;rename_to;descricao_oficial;tipo_original
+ID;Identificador;ID;Identificador único;INTEGER
+NOME;Nome do cliente;NOME;Nome completo;VARCHAR
+DATA_NASC;Data de nascimento;DATA_NASC;Data de nascimento;DATE

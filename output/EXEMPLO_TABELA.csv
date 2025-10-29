@@ -1,0 +1,5 @@
+tabela;descricao_mf;coluna_mf;rename_to;descricao_coluna_mf;descricao_oficial;tipo_original
+EXEMPLO_TABELA;Tabela de exemplo para testes;ID;ID;;;INTEGER
+EXEMPLO_TABELA;Tabela de exemplo para testes;NOME;NOME;;;VARCHAR
+EXEMPLO_TABELA;Tabela de exemplo para testes;DATA_NASC;DATA_NASC;;;DATE
+EXEMPLO_TABELA;Tabela de exemplo para testes;SALARIO;SALARIO;;;DECIMAL

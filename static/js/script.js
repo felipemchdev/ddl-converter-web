@@ -1,150 +1,155 @@
 // DDL Converter - JavaScript Functions
+console.log('Script carregado com sucesso!');
 
-let uploadedFiles = [];
-let currentThreadId = null;
-let sessionHistory = [];
+let ddlFile = null;
+let jsonFile = null;
+let csvData = [];
+let nomeTabela = '';
 
 // DOM Elements
 const uploadArea = document.getElementById('uploadArea');
-const fileInput = document.getElementById('fileInput');
-const fileList = document.getElementById('fileList');
-const fileItems = document.getElementById('fileItems');
-const processBtn = document.getElementById('processBtn');
+const ddlInput = document.getElementById('ddlInput');
+const jsonInput = document.getElementById('jsonInput');
 const uploadSection = document.getElementById('uploadSection');
-const processSection = document.getElementById('processSection');
+const csvEditorSection = document.getElementById('csvEditorSection');
 const resultsSection = document.getElementById('resultsSection');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const notification = document.getElementById('notification');
 
-// Initialize drag and drop
-uploadArea.addEventListener('dragover', handleDragOver);
-uploadArea.addEventListener('dragleave', handleDragLeave);
-uploadArea.addEventListener('drop', handleDrop);
-// Removido: uploadArea.addEventListener('click', () => fileInput.click());
+// File input listeners
+ddlInput.addEventListener('change', function(e) {
+    ddlFile = e.target.files[0];
+    document.getElementById('ddlFileName').textContent = ddlFile ? '✓ ' + ddlFile.name : '';
+});
 
-fileInput.addEventListener('change', handleFileSelect);
+jsonInput.addEventListener('change', function(e) {
+    jsonFile = e.target.files[0];
+    document.getElementById('jsonFileName').textContent = jsonFile ? '✓ ' + jsonFile.name : '';
+});
 
-function handleDragOver(e) {
-    e.preventDefault();
-    uploadArea.classList.add('dragover');
-}
-
-function handleDragLeave(e) {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
-}
-
-function handleFileSelect(e) {
-    const files = Array.from(e.target.files);
-    handleFiles(files);
-}
-
-function handleFiles(files) {
-    if (files.length === 0) return;
-    
-    showLoading();
-    
-    const formData = new FormData();
-    files.forEach(file => {
-        formData.append('files', file);
-    });
-    
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        hideLoading();
-        
-        if (data.success) {
-            uploadedFiles = data.uploaded_files;
-            displayFiles(data.uploaded_files, data.skipped_files);
-            
-            let message = data.message;
-            if (data.skipped_files.length > 0) {
-                message += `. ${data.skipped_files.length} arquivo(s) ignorado(s) (já processados anteriormente)`;
-            }
-            showNotification(message, 'success');
-        } else {
-            showNotification(data.error, 'error');
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        showNotification('Erro ao enviar arquivos: ' + error.message, 'error');
-    });
-}
-
-function displayFiles(files, skippedFiles = []) {
-    fileItems.innerHTML = '';
-    
-    // Mostrar arquivos enviados
-    files.forEach(file => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        fileItem.innerHTML = `
-            <div class="file-info-item">
-                <i class="fas fa-file-alt"></i>
-                <span>${file.filename}</span>
-            </div>
-            <span class="file-status status-new">Novo</span>
-        `;
-        fileItems.appendChild(fileItem);
-    });
-    
-    // Mostrar arquivos ignorados
-    skippedFiles.forEach(filename => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        fileItem.innerHTML = `
-            <div class="file-info-item">
-                <i class="fas fa-file-alt"></i>
-                <span>${filename}</span>
-            </div>
-            <span class="file-status status-duplicate">Já processado</span>
-        `;
-        fileItems.appendChild(fileItem);
-    });
-    
-    if (files.length > 0) {
-        fileList.style.display = 'block';
-        processBtn.disabled = false;
-    } else {
-        fileList.style.display = 'none';
-    }
-}
-
-function clearFiles() {
-    uploadedFiles = [];
-    fileList.style.display = 'none';
-    fileInput.value = '';
-    showNotification('Lista de arquivos limpa', 'success');
-}
-
-function processFiles() {
-    if (uploadedFiles.length === 0) {
-        showNotification('Nenhum arquivo para processar', 'warning');
+// Função para comparar arquivos
+function compareFiles() {
+    if (!ddlFile || !jsonFile) {
+        showNotification('Selecione ambos os arquivos (DDL e JSON)', 'warning');
         return;
     }
     
     showLoading();
+    console.log('Iniciando comparação...');
     
-    fetch('/process', {
+    const formData = new FormData();
+    formData.append('ddl_file', ddlFile);
+    formData.append('json_file', jsonFile);
+    
+    fetch('/compare', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        hideLoading();
+        
+        if (data.success) {
+            console.log('Sucesso! Dados recebidos:', data);
+            csvData = data.dados_csv;
+            nomeTabela = data.nome_tabela;
+            
+            displayCsvEditor(data);
+            showNotification('Comparação realizada com sucesso!', 'success');
+        } else {
+            console.error('Erro na resposta:', data.error);
+            showNotification(data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição:', error);
+        hideLoading();
+        showNotification('Erro na comparação: ' + error.message, 'error');
+    });
+}
+
+// Função para exibir editor de CSV
+function displayCsvEditor(data) {
+    console.log('Exibindo editor de CSV...');
+    console.log('csvEditorSection:', csvEditorSection);
+    console.log('uploadSection:', uploadSection);
+    
+    uploadSection.style.display = 'none';
+    csvEditorSection.style.display = 'block';
+    
+    console.log('Seções atualizadas');
+    
+    // Preencher estatísticas
+    document.getElementById('tabelaNome').textContent = data.nome_tabela;
+    document.getElementById('totalColunas').textContent = data.num_colunas;
+    document.getElementById('colunasNovas').textContent = data.num_colunas_novas;
+    document.getElementById('colunasExistentes').textContent = data.num_colunas_existentes;
+    
+    console.log('Estatísticas preenchidas');
+    
+    // Preencher tabela
+    const tbody = document.getElementById('csvTableBody');
+    tbody.innerHTML = '';
+    
+    console.log('Adicionando linhas:', data.dados_csv.length);
+    
+    for (let i = 0; i < data.dados_csv.length; i++) {
+        const linha = data.dados_csv[i];
+        const tr = document.createElement('tr');
+        const isNova = !linha.rename_to;
+        const isRemovida = linha.coluna_mf.includes('[REMOVIDA]');
+        
+        tr.innerHTML = `
+            <td><strong>${linha.coluna_mf}</strong></td>
+            <td><span style="color: #666;">${linha.tipo_original || 'VARCHAR'}</span></td>
+            <td>
+                <input type="text" class="csv-input" value="${linha.rename_to}" 
+                       data-field="rename_to" data-row="${i}"
+                       ${isRemovida ? 'disabled' : ''}
+                       onchange="updateCsvData(this)">
+            </td>
+            <td>
+                <input type="text" class="csv-input" value="${linha.descricao_oficial}" 
+                       data-field="descricao_oficial" data-row="${i}"
+                       ${isRemovida ? 'disabled' : ''}
+                       onchange="updateCsvData(this)">
+            </td>
+            <td>
+                <span class="status-badge ${isRemovida ? 'status-removed' : (isNova ? 'status-new' : 'status-existing')}">
+                    ${isRemovida ? 'REMOVIDA' : (isNova ? 'NOVA' : 'EXISTENTE')}
+                </span>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    }
+    
+    console.log('Tabela preenchida com sucesso');
+}
+
+// Atualizar dados do CSV
+function updateCsvData(input) {
+    const rowIndex = parseInt(input.dataset.row);
+    const field = input.dataset.field;
+    csvData[rowIndex][field] = input.value;
+}
+
+// Salvar e gerar JSON
+function salvarEGerar() {
+    showLoading();
+    
+    fetch('/salvar_csv_json', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            files: uploadedFiles
+            dados_csv: csvData,
+            nome_tabela: nomeTabela
         })
     })
     .then(response => response.json())
@@ -152,142 +157,68 @@ function processFiles() {
         hideLoading();
         
         if (data.success) {
-            currentThreadId = data.thread_id;
-            showProcessingSection();
-            monitorProgress();
-            showNotification('Processamento iniciado', 'success');
+            // Configura o botão de download para baixar o arquivo JSON
+            document.getElementById('downloadJsonBtn').onclick = function() {
+                downloadJson(data.json_filename);
+            };
+            
+            csvEditorSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+            showNotification('JSON gerado com sucesso!', 'success');
         } else {
             showNotification(data.error, 'error');
         }
     })
     .catch(error => {
         hideLoading();
-        showNotification('Erro ao iniciar processamento: ' + error.message, 'error');
+        showNotification('Erro ao gerar JSON: ' + error.message, 'error');
     });
 }
 
-function showProcessingSection() {
-    uploadSection.style.display = 'none';
-    processSection.style.display = 'block';
-    resultsSection.style.display = 'none';
-}
-
-function monitorProgress() {
-    if (!currentThreadId) return;
+// Faz o download do arquivo JSON
+function downloadJson(filename) {
+    console.log(`[DEBUG] Iniciando download do arquivo: ${filename}`);
     
-    const checkStatus = () => {
-        fetch(`/status/${currentThreadId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const status = data.status;
-                updateProgress(status);
-                
-                if (status.status === 'completed') {
-                    showResults(status);
-                } else {
-                    setTimeout(checkStatus, 1000); // Check again in 1 second
-                }
-            } else {
-                showNotification('Erro ao verificar status', 'error');
-            }
-        })
-        .catch(error => {
-            showNotification('Erro de conexão: ' + error.message, 'error');
-        });
-    };
+    // Criar um link temporário
+    const link = document.createElement('a');
+    link.href = `/download_json/${filename}`;
     
-    checkStatus();
-}
-
-function updateProgress(status) {
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const processStatus = document.getElementById('processStatus');
+    // Forçar o download em vez de abrir em nova aba
+    link.setAttribute('download', filename);
     
-    const percentage = Math.round((status.completed / status.total) * 100);
+    // Adicionar o link ao documento
+    document.body.appendChild(link);
     
-    progressFill.style.width = percentage + '%';
-    progressText.textContent = percentage + '%';
-    processStatus.textContent = `Processando arquivo ${status.completed} de ${status.total}...`;
-}
-
-function showResults(status) {
-    processSection.style.display = 'none';
-    resultsSection.style.display = 'block';
+    // Disparar o clique no link
+    link.click();
     
-    displayResults(status.results, status.errors);
+    // Remover o link após o download
+    setTimeout(() => {
+        document.body.removeChild(link);
+    }, 100);
     
-    if (status.results.length > 0) {
-        showNotification(`${status.results.length} arquivo(s) processado(s) com sucesso!`, 'success');
-        // Atualizar histórico da sessão
-        refreshHistory();
-    }
+    // Abrir em uma nova aba como fallback
+    setTimeout(() => {
+        window.open(`/download_json/${filename}`, '_blank');
+    }, 200);
     
-    if (status.errors.length > 0) {
-        showNotification(`${status.errors.length} arquivo(s) com erro`, 'error');
-    }
-}
-
-function displayResults(results, errors) {
-    const successResults = document.getElementById('successResults');
-    const errorResults = document.getElementById('errorResults');
-    
-    // Clear previous results
-    successResults.innerHTML = '';
-    errorResults.innerHTML = '';
-    
-    // Display successful results
-    results.forEach(result => {
-        const resultCard = document.createElement('div');
-        resultCard.className = 'result-card';
-        resultCard.innerHTML = `
-            <h4><i class="fas fa-check-circle"></i> ${result.filename}</h4>
-            <div class="result-info">
-                <p><strong>Tabela:</strong> ${result.table_name}</p>
-                <p><strong>Colunas:</strong> ${result.columns}</p>
-            </div>
-            <div class="result-downloads">
-                <a href="/download/${result.csv_path.replace(/\\/g, '/')}" class="download-btn">
-                    <i class="fas fa-file-csv"></i> CSV
-                </a>
-                <a href="/download/${result.json_path.replace(/\\/g, '/')}" class="download-btn">
-                    <i class="fas fa-file-code"></i> JSON
-                </a>
-            </div>
-        `;
-        successResults.appendChild(resultCard);
-    });
-    
-    // Display errors if any
-    if (errors.length > 0) {
-        errorResults.style.display = 'block';
-        errorResults.innerHTML = `
-            <h4><i class="fas fa-exclamation-triangle"></i> Arquivos com Erro</h4>
-        `;
-        
-        errors.forEach(error => {
-            const errorItem = document.createElement('div');
-            errorItem.className = 'error-item';
-            errorItem.innerHTML = `
-                <strong>${error.filename}:</strong> ${error.error}
-            `;
-            errorResults.appendChild(errorItem);
-        });
-    }
-}
-
-function downloadAll() {
-    window.location.href = '/download_all';
+    console.log(`[DEBUG] Download do arquivo ${filename} solicitado`);
 }
 
 function startOver() {
     uploadSection.style.display = 'block';
-    processSection.style.display = 'none';
+    csvEditorSection.style.display = 'none';
     resultsSection.style.display = 'none';
     
-    clearFiles();
-    currentThreadId = null;
+    ddlFile = null;
+    jsonFile = null;
+    csvData = [];
+    nomeTabela = '';
+    
+    document.getElementById('ddlFileName').textContent = '';
+    document.getElementById('jsonFileName').textContent = '';
+    document.getElementById('ddlInput').value = '';
+    document.getElementById('jsonInput').value = '';
     
     showNotification('Pronto para processar novos arquivos', 'success');
 }
@@ -339,108 +270,25 @@ function showNotification(message, type = 'success') {
 // Tab Functions
 function showTab(tabName) {
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    const tabs = document.querySelectorAll('.tab-content');
+    for (let tab of tabs) {
         tab.classList.remove('active');
-    });
+    }
     
     // Remove active class from all buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    const buttons = document.querySelectorAll('.tab-btn');
+    for (let btn of buttons) {
         btn.classList.remove('active');
-    });
+    }
     
     // Show selected tab
     if (tabName === 'converter') {
         document.getElementById('converterTab').classList.add('active');
         document.querySelector('[onclick="showTab(\'converter\')"]').classList.add('active');
-    } else if (tabName === 'history') {
-        document.getElementById('historyTab').classList.add('active');
-        document.querySelector('[onclick="showTab(\'history\')"]').classList.add('active');
-        refreshHistory();
-    }
-}
-
-// History Functions
-function refreshHistory() {
-    fetch('/session_history')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            sessionHistory = data.history;
-            displayHistory(sessionHistory);
-            updateHistoryCount();
-        }
-    })
-    .catch(error => {
-        console.error('Erro ao carregar histórico:', error);
-    });
-}
-
-function displayHistory(history) {
-    const historyContent = document.getElementById('historyContent');
-    
-    if (history.length === 0) {
-        historyContent.innerHTML = `
-            <div class="empty-history">
-                <i class="fas fa-clock"></i>
-                <h3>Nenhum arquivo processado ainda</h3>
-                <p>Os arquivos convertidos nesta sessão aparecerão aqui</p>
-            </div>
-        `;
-        return;
-    }
-    
-    const historyGrid = document.createElement('div');
-    historyGrid.className = 'history-grid';
-    
-    history.forEach(item => {
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.innerHTML = `
-            <div class="history-item-header">
-                <div>
-                    <div class="history-item-title">${item.filename}</div>
-                </div>
-                <div class="history-item-time">
-                    ${item.date}<br>
-                    ${item.timestamp}
-                </div>
-            </div>
-            <div class="history-item-info">
-                <p><strong>Tabela:</strong> ${item.table_name}</p>
-                <p><strong>Colunas:</strong> ${item.columns}</p>
-            </div>
-            <div class="history-item-downloads">
-                <a href="/download/${item.csv_path.replace(/\\/g, '/')}" class="download-btn">
-                    <i class="fas fa-file-csv"></i> CSV
-                </a>
-                <a href="/download/${item.json_path.replace(/\\/g, '/')}" class="download-btn">
-                    <i class="fas fa-file-code"></i> JSON
-                </a>
-            </div>
-        `;
-        historyGrid.appendChild(historyItem);
-    });
-    
-    historyContent.innerHTML = '';
-    historyContent.appendChild(historyGrid);
-}
-
-function updateHistoryCount() {
-    const historyCount = document.getElementById('historyCount');
-    historyCount.textContent = sessionHistory.length;
-}
-
-function clearSessionHistory() {
-    if (confirm('Tem certeza que deseja limpar o histórico da sessão? Os arquivos não serão removidos.')) {
-        sessionHistory = [];
-        displayHistory([]);
-        updateHistoryCount();
-        showNotification('Histórico da sessão limpo', 'success');
     }
 }
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DDL Converter Web App initialized');
-    refreshHistory(); // Carregar histórico inicial
 });

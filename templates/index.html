@@ -22,94 +22,105 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Navigation Tabs -->
-            <nav class="tab-navigation">
-                <button class="tab-btn active" onclick="showTab('converter')">
-                    <i class="fas fa-upload"></i>
-                    Conversor
-                </button>
-                <button class="tab-btn" onclick="showTab('history')">
-                    <i class="fas fa-history"></i>
-                    Histórico da Sessão
-                    <span class="history-count" id="historyCount">0</span>
-                </button>
-            </nav>
-
             <!-- Converter Tab -->
             <div class="tab-content active" id="converterTab">
                 <!-- Upload Section -->
                 <section class="upload-section" id="uploadSection">
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
+                        <i class="fas fa-code-branch"></i>
                     </div>
-                    <h2>Selecione seus arquivos DDL</h2>
+                    <h2>Conversor de DDL</h2>
                     <p>Arraste e solte os arquivos aqui ou clique para selecionar</p>
-                    <p class="file-info">Formatos aceitos: .txt, .ddl | Tamanho máximo: 16MB por arquivo</p>
+                    <p class="file-info">Selecione um arquivo DDL e um JSON antigo para conversão</p>
                     
-                    <input type="file" id="fileInput" multiple accept=".txt,.ddl" style="display: none;">
-                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-folder-open"></i>
-                        Selecionar Arquivos
+                    <div class="file-inputs" style="display: flex; gap: 20px; justify-content: center; margin: 20px 0;">
+                        <div>
+                            <label for="ddlInput" style="display: block; margin-bottom: 10px;">Arquivo DDL:</label>
+                            <input type="file" id="ddlInput" accept=".txt,.ddl" style="display: none;">
+                            <button class="upload-btn" onclick="document.getElementById('ddlInput').click()">
+                                <i class="fas fa-file-alt"></i>
+                                Selecionar DDL
+                            </button>
+                            <span id="ddlFileName" style="display: block; margin-top: 5px; color: #666;"></span>
+                        </div>
+                        <div>
+                            <label for="jsonInput" style="display: block; margin-bottom: 10px;">Arquivo JSON:</label>
+                            <input type="file" id="jsonInput" accept=".json" style="display: none;">
+                            <button class="upload-btn" onclick="document.getElementById('jsonInput').click()">
+                                <i class="fas fa-file-code"></i>
+                                Selecionar JSON
+                            </button>
+                            <span id="jsonFileName" style="display: block; margin-top: 5px; color: #666;"></span>
+                        </div>
+                    </div>
+                    
+                    <button class="upload-btn" id="compareBtn" onclick="compareFiles()" style="background-color: #4CAF50; margin-top: 20px;">
+                        <i class="fas fa-play"></i>
+                        Iniciar
                     </button>
                 </div>
+                </section>
 
-                <!-- File List -->
-                <div class="file-list" id="fileList" style="display: none;">
-                    <h3><i class="fas fa-list"></i> Arquivos Selecionados</h3>
-                    <div id="fileItems"></div>
-                    <div class="file-actions">
-                        <button class="btn btn-primary" id="processBtn" onclick="processFiles()">
-                            <i class="fas fa-cogs"></i>
-                            Processar Arquivos
-                        </button>
-                        <button class="btn btn-secondary" onclick="clearFiles()">
-                            <i class="fas fa-trash"></i>
-                            Limpar Lista
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Processing Section -->
-            <section class="processing-section" id="processSection" style="display: none;">
-                <div class="processing-card">
-                    <h3><i class="fas fa-spinner fa-spin"></i> Processando Arquivos</h3>
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill"></div>
+                <!-- CSV Editor Section -->
+                <section class="csv-editor-section" id="csvEditorSection" style="display: none;">
+                    <div class="csv-editor-header">
+                        <h3><i class="fas fa-table"></i> Editor de CSV</h3>
+                        <div class="csv-stats">
+                            <span>Tabela: <strong id="tabelaNome"></strong></span>
+                            <span>Total: <strong id="totalColunas"></strong> colunas</span>
+                            <span>Novas: <strong id="colunasNovas"></strong></span>
+                            <span>Existentes: <strong id="colunasExistentes"></strong></span>
                         </div>
-                        <span class="progress-text" id="progressText">0%</span>
                     </div>
-                    <p id="processStatus">Iniciando processamento...</p>
-                </div>
-            </section>
-
-            <!-- Results Section -->
-            <section class="results-section" id="resultsSection" style="display: none;">
-                <div class="results-header">
-                    <h3><i class="fas fa-check-circle"></i> Processamento Concluído</h3>
-                    <div class="results-actions">
-                        <button class="btn btn-success" onclick="downloadAll()">
-                            <i class="fas fa-download"></i>
-                            Baixar Todos (ZIP)
+                    
+                    <div class="csv-table-container">
+                        <table class="csv-table" id="csvTable">
+                            <thead>
+                                <tr>
+                                    <th>Coluna MF</th>
+                                    <th>Tipo Original</th>
+                                    <th>Rename To</th>
+                                    <th>Descrição Oficial</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="csvTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="csv-actions">
+                        <button class="btn btn-success" onclick="salvarEGerar()">
+                            <i class="fas fa-save"></i>
+                            Salvar e Gerar JSON
                         </button>
                         <button class="btn btn-secondary" onclick="startOver()">
                             <i class="fas fa-redo"></i>
-                            Processar Novos Arquivos
+                            Voltar
                         </button>
                     </div>
-                </div>
+                </section>
 
-                <!-- Success Results -->
-                <div class="results-grid" id="successResults"></div>
-
-                <!-- Error Results -->
-                <div class="error-results" id="errorResults" style="display: none;"></div>
-            </section>
+                <!-- Results Section -->
+                <section class="results-section" id="resultsSection" style="display: none;">
+                    <div class="results-header">
+                        <h3><i class="fas fa-check-circle"></i> JSON Gerado com Sucesso!</h3>
+                        <div class="results-actions">
+                            <button class="btn btn-success" id="downloadJsonBtn" onclick="downloadJson()">
+                                <i class="fas fa-download"></i>
+                                Baixar JSON
+                            </button>
+                            <button class="btn btn-secondary" onclick="startOver()">
+                                <i class="fas fa-redo"></i>
+                                Processar Novos Arquivos
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Features Section -->
-                <section class="features-section">
+                <section class="features-section" style="display: none;">
                     <h2>Recursos do Conversor</h2>
                     <div class="features-grid">
                         <div class="feature-card">
@@ -131,33 +142,6 @@
                             <i class="fas fa-download"></i>
                             <h3>Download Fácil</h3>
                             <p>Baixe arquivos individuais ou todos em ZIP</p>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- History Tab -->
-            <div class="tab-content" id="historyTab">
-                <section class="history-section">
-                    <div class="history-header">
-                        <h2><i class="fas fa-history"></i> Histórico da Sessão</h2>
-                        <div class="history-actions">
-                            <button class="btn btn-secondary" onclick="refreshHistory()">
-                                <i class="fas fa-sync"></i>
-                                Atualizar
-                            </button>
-                            <button class="btn btn-warning" onclick="clearSessionHistory()">
-                                <i class="fas fa-trash"></i>
-                                Limpar Histórico
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="history-content" id="historyContent">
-                        <div class="empty-history">
-                            <i class="fas fa-clock"></i>
-                            <h3>Nenhum arquivo processado ainda</h3>
-                            <p>Os arquivos convertidos nesta sessão aparecerão aqui</p>
                         </div>
                     </div>
                 </section>

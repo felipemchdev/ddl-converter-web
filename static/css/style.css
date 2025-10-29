@@ -735,3 +735,127 @@ body {
         justify-content: center;
     }
 }
+
+/* CSV Editor Section */
+.csv-editor-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #f8f9ff;
+    border-radius: 15px;
+    border: 1px solid #e0e0ff;
+}
+
+.csv-editor-header {
+    margin-bottom: 2rem;
+}
+
+.csv-editor-header h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.csv-stats {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.csv-stats span {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.csv-stats strong {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.csv-table-container {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.csv-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.csv-table thead {
+    background: #667eea;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.csv-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #667eea;
+}
+
+.csv-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.csv-table tbody tr:hover {
+    background: #f8f9ff;
+}
+
+.csv-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.csv-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.status-new {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.status-badge.status-existing {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #28a745;
+}
+
+.status-badge.status-removed {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.csv-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+}

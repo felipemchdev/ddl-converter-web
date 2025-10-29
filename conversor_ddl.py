@@ -23,6 +23,7 @@ Autor: Felipe Machado
 import json
 import csv
 import re
+import os
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -96,8 +97,18 @@ def extrair_informacoes_tabela(conteudo_ddl: str, nome_tabela: str) -> Dict[str,
         rf"LABEL\s+ON\s+TABLE\s+{match_create['schema']}\.{nome_tabela}\s+"
         r"IS\s+'(?P<descricao>.*)'"
     )
-    match_label = re.search(padrao_label_tabela, conteudo_ddl)
-    descricao_tabela = match_label.group('descricao') if match_label else ""
+    match_label = re.search(padrao_label_tabela, conteudo_ddl, re.IGNORECASE)
+    
+    # Log para depuração
+    print(f"[DEBUG] Padrão de busca da descrição: {padrao_label_tabela}")
+    print(f"[DEBUG] Match encontrado: {match_label is not None}")
+    
+    if match_label:
+        descricao_tabela = match_label.group('descricao')
+        print(f"[DEBUG] Descrição da tabela encontrada: {descricao_tabela}")
+    else:
+        descricao_tabela = ""
+        print("[DEBUG] Nenhuma descrição encontrada para a tabela")
     
     # Extrair colunas
     colunas = extrair_colunas(match_create['colunas'], conteudo_ddl, match_create['schema'], nome_tabela)
@@ -132,29 +143,42 @@ def extrair_colunas(texto_colunas: str, conteudo_ddl: str, schema: str, nome_tab
     colunas = []
     
     # Extrair descrições das colunas
+    print("[DEBUG] Extraindo descrições das colunas...")
     descricoes_colunas = extrair_descricoes_colunas(conteudo_ddl, schema, nome_tabela)
+    print(f"[DEBUG] Descrições encontradas: {descricoes_colunas}")
     
     # Processar cada linha de definição de coluna
+    print("[DEBUG] Processando definições de colunas...")
     for linha in texto_colunas.split('\n'):
+        linha = linha.strip()
+        if not linha:
+            continue
+            
         padrao_coluna = (
             r"(\d{6})?\s*(?P<nome>\w+)\s+(?P<tipo_dado>\w+(\(.*\))?)\s*"
             r"(?P<nullable>(NOT)?\s+NULL)?"
             r"(?P<default>\s+WITH\s+DEFAULT(\s+(?P<valor_default>(\d+)|(\'.*\')))?)?"
         )
         
-        match = re.search(padrao_coluna, linha)
+        match = re.search(padrao_coluna, linha, re.IGNORECASE)
         if match:
             nome_coluna = match.group('nome')
+            print(f"[DEBUG] Processando coluna: {nome_coluna}")
+            
             tipo_dado = processar_tipo_dado(match.group('tipo_dado'))
-            nullable = not bool(match.group('nullable') and 'NOT' in match.group('nullable'))
+            nullable = not bool(match.group('nullable') and 'NOT' in match.group('nullable').upper())
             valor_default = processar_valor_default(match.group('valor_default'), tipo_dado['tipo'])
+            
+            # Obter descrição ou usar vazio se não existir
+            descricao = descricoes_colunas.get(nome_coluna, "")
+            print(f"[DEBUG] Descrição para {nome_coluna}: {descricao}")
             
             coluna = {
                 'nome': nome_coluna,
                 'tipo_dado': tipo_dado,
                 'nullable': nullable,
                 'valor_default': valor_default,
-                'descricao': descricoes_colunas.get(nome_coluna, "")
+                'descricao': descricao
             }
             colunas.append(coluna)
     
@@ -248,28 +272,49 @@ def extrair_descricoes_colunas(conteudo_ddl: str, schema: str, nome_tabela: str)
     Returns:
         Dicionário mapeando nome da coluna para sua descrição
     """
+    # Padrão para encontrar o bloco de LABEL ON TABLE
     padrao_labels = (
-        rf"LABEL\s+ON\s+{schema}\.{nome_tabela}\s*"
-        r"\((?P<colunas>(\s*\w+\s+IS\s+'.+?'\s*,?\s*\d*\s*)+)\s*\);"
+        rf"LABEL\s+ON\s+{re.escape(schema)}\.{re.escape(nome_tabela)}\s*"
+        r"\((?P<colunas>[\s\S]*?)\)\s*;"
     )
     
-    match = re.search(padrao_labels, conteudo_ddl)
+    print(f"[DEBUG] Buscando descrições para {schema}.{nome_tabela}")
+    
+    # Buscar o bloco de descrições
+    match = re.search(padrao_labels, conteudo_ddl, re.IGNORECASE)
     if not match:
-        print(f"Aviso: Não foram encontradas descrições para as colunas da tabela {nome_tabela}")
+        print(f"[DEBUG] Nenhum bloco LABEL encontrado para {schema}.{nome_tabela}")
         return {}
     
-    descricoes = {}
     texto_colunas = match.group('colunas')
+    print(f"[DEBUG] Texto das descrições encontrado: {texto_colunas[:100]}...")
     
+    # Padrão para extrair cada descrição de coluna
+    padrao_descricao = r"""
+        ^\s*                         # Espaços iniciais
+        (?:\d+\s+)?                 # Número opcional no início
+        "?(?P<nome>[\w_]+)"?\s+    # Nome da coluna (com aspas opcionais)
+        IS\s+                        # Palavra-chave IS
+        '(?P<descricao>[^']*)'       # Descrição entre aspas simples
+        \s*(?:,|$)                   # Vírgula ou fim de linha
+    """
+    
+    descricoes = {}
+    
+    # Processar cada linha do bloco de descrições
     for linha in texto_colunas.split('\n'):
-        padrao_descricao = r"\s*\d*\s*(?P<nome>\w+)\s+IS\s+'(?P<descricao>[\w\W]+?)'"
-        match_desc = re.search(padrao_descricao, linha)
-        
+        linha = linha.strip()
+        if not linha or linha.isspace():
+            continue
+            
+        match_desc = re.search(padrao_descricao, linha, re.VERBOSE | re.IGNORECASE)
         if match_desc:
             nome = match_desc.group('nome')
             descricao = match_desc.group('descricao').strip()
             descricoes[nome] = descricao
+            print(f"[DEBUG] Descrição encontrada - Coluna: {nome}, Descrição: {descricao}")
     
+    print(f"[DEBUG] Total de descrições encontradas: {len(descricoes)}")
     return descricoes
 
 
@@ -414,6 +459,7 @@ def gerar_campos_auditoria() -> List[Dict[str, Any]]:
 def criar_dicionario_csv(info_tabela: Dict[str, Any], caminho_saida: str) -> None:
     """
     Cria arquivo CSV com dicionário da tabela para preenchimento manual.
+    Inclui coluna 'rename_to' que será usada para gerar o JSON.
     
     Args:
         info_tabela: Informações da tabela
@@ -422,14 +468,18 @@ def criar_dicionario_csv(info_tabela: Dict[str, Any], caminho_saida: str) -> Non
     linhas = []
     
     for coluna in info_tabela['colunas']:
+        # Extrair tipo de dado da coluna
+        tipo_dado = coluna.get('tipo_dado', {})
+        tipo_original = tipo_dado.get('tipo', 'VARCHAR')
+        
         linha = {
             'tabela': info_tabela['nome'],
-            'descricao_mf': info_tabela['descricao'],
-            'descricao': '',  # Para preenchimento manual
+            'descricao_mf': info_tabela.get('descricao', ''),
             'coluna_mf': coluna['nome'],
-            'coluna': '',  # Para preenchimento manual
-            'descricao_coluna_mf': coluna['descricao'],
-            'descricao_coluna': ''  # Para preenchimento manual
+            'rename_to': coluna['nome'],  # Preenche com o nome da coluna por padrão
+            'descricao_coluna_mf': coluna.get('descricao', ''),
+            'descricao_oficial': '',  # Deixar vazio para preenchimento manual
+            'tipo_original': tipo_original  # Adiciona o tipo de dado original
         }
         linhas.append(linha)
     
@@ -582,6 +632,7 @@ def buscar_arquivos_ddl(pasta_ddls: str = "ddls") -> List[str]:
 def gerar_dicionario_automatico(info_tabela: Dict[str, Any]) -> List[Dict[str, str]]:
     """
     Gera dicionário automaticamente sem necessidade de preenchimento manual.
+    Inclui campo 'rename_to' preenchido automaticamente.
     
     Args:
         info_tabela: Informações da tabela extraídas do DDL
@@ -601,11 +652,10 @@ def gerar_dicionario_automatico(info_tabela: Dict[str, Any]) -> List[Dict[str, s
         linha = {
             'tabela': info_tabela['nome'],
             'descricao_mf': info_tabela['descricao'],
-            'descricao': f"Tabela {info_tabela['nome']} - {info_tabela['descricao']}" if info_tabela['descricao'] else f"Tabela {info_tabela['nome']}",
             'coluna_mf': coluna['nome'],
-            'coluna': nome_coluna_mlops,
+            'rename_to': nome_coluna_mlops,  # Preenchido automaticamente
             'descricao_coluna_mf': coluna['descricao'] if coluna['descricao'] else "",
-            'descricao_coluna': descricao_coluna
+            'descricao_oficial': descricao_coluna
         }
         dicionario.append(linha)
     
@@ -615,6 +665,7 @@ def gerar_dicionario_automatico(info_tabela: Dict[str, Any]) -> List[Dict[str, s
 def processar_arquivo_ddl(caminho_ddl: str, pasta_saida: str = "output") -> Dict[str, Any]:
     """
     Processa um único arquivo DDL e retorna informações do processamento.
+    Gera apenas o arquivo CSV. O JSON é gerado separadamente pelo json_generator.py
     
     Args:
         caminho_ddl: Caminho para o arquivo DDL
@@ -629,25 +680,14 @@ def processar_arquivo_ddl(caminho_ddl: str, pasta_saida: str = "output") -> Dict
         nome_tabela = extrair_nome_tabela(conteudo_ddl)
         info_tabela = extrair_informacoes_tabela(conteudo_ddl, nome_tabela)
         
-        # Gerar dicionário automaticamente
-        dicionario = gerar_dicionario_automatico(info_tabela)
-        
         # Salvar CSV para referência (diretamente na pasta de saída)
         caminho_csv = os.path.join(pasta_saida, f"{nome_tabela}.csv")
         criar_dicionario_csv(info_tabela, caminho_csv)
-        
-        # Criar configuração MLOps diretamente
-        configuracao = criar_configuracao_mlops(info_tabela, dicionario)
-        
-        # Salvar arquivo JSON (diretamente na pasta de saída)
-        caminho_json = os.path.join(pasta_saida, f"{nome_tabela.lower()}.json")
-        salvar_configuracao_json(configuracao, caminho_json)
         
         return {
             'sucesso': True,
             'nome_tabela': nome_tabela,
             'caminho_csv': caminho_csv,
-            'caminho_json': caminho_json,
             'num_colunas': len(info_tabela['colunas']),
             'erro': None
         }
@@ -657,7 +697,6 @@ def processar_arquivo_ddl(caminho_ddl: str, pasta_saida: str = "output") -> Dict
             'sucesso': False,
             'nome_tabela': None,
             'caminho_csv': None,
-            'caminho_json': None,
             'num_colunas': 0,
             'erro': str(e)
         }
@@ -682,8 +721,9 @@ def exibir_erro_critico(mensagem_erro: str):
 def main():
     """
     Função principal do conversor DDL para MLOps - Versão Automatizada.
+    Gera apenas o arquivo CSV. Para gerar JSON, use o json_generator.py
     """
-    print("=== Conversor DDL para Configuracoes MLOps - Automatico ===\n")
+    print("=== Conversor DDL para Configuracoes MLOps - Gerador CSV ===\n")
     
     try:
         # Buscar arquivos DDL automaticamente
@@ -720,8 +760,7 @@ def main():
             print("="*60)
             print(f"Tabela processada: {resultado['nome_tabela']}")
             print(f"CSV gerado: {resultado['caminho_csv']}")
-            print(f"JSON MLOps: {resultado['caminho_json']}")
-            print("Arquivos prontos para uso!")
+            print("\nPróxima etapa: Use json_generator.py para gerar o JSON")
             print("="*60)
         else:
             exibir_erro_critico(resultado['erro'])
